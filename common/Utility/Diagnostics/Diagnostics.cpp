@@ -32,4 +32,15 @@ void Diagnostics::Print()
     std::cout << "====================== DIAGNOSTICS END ========================" << std::endl;
 }
 
+void Diagnostics::FilePrint(const std::string& fileName)
+{
+	std::fstream fcout;
+	fcout.open(fileName, std::fstream::out | std::fstream::app);
+
+	fcout << "Ray-Triangle Intersections: " << statisticsAggregator[DiagnosticsType::TRIANGLE_INTERSECTIONS] << std::endl;
+	fcout << "Ray-Box Intersections: " << statisticsAggregator[DiagnosticsType::BOX_INTERSECTIONS] << std::endl;
+	fcout << "Rays Created: " << statisticsAggregator[DiagnosticsType::RAYS_CREATED] << std::endl;
+	fcout << std::endl;
+}
+
 #endif

@@ -13,7 +13,8 @@ enum class DiagnosticsType
 #if DIAGNOSTICS_ON
 #define DIAGNOSTICS_STAT(t) Diagnostics::Get()->IncrementStat(t)
 #define DIAGNOSTICS_PRINT() Diagnostics::Get()->Print()
-#define DIAGNOSTICS_TIMER(N,D) Timer N(D)
+#define DIAGNOSTICS_FILE_PRINT(fileName) Diagnostics::Get()->FilePrint(fileName)
+#define DIAGNOSTICS_TIMER(N,D,F) Timer N(D,F)
 #define DIAGNOSTICS_END_TIMER(N) N.Tock()
 #define DIAGNOSTICS_LOG(S) Diagnostics::Get()->Log(S)
 
@@ -29,6 +30,7 @@ public:
 
     void IncrementStat(DiagnosticsType type);
     void Print();
+	void FilePrint(const std::string& fileName = "log.txt");
     void Log(const std::string& log);
 private:
 
