@@ -24,13 +24,33 @@
 int main(int argc, char** argv)  
 {
     std::unique_ptr<APPLICATION> currentApplication = make_unique<APPLICATION>();
+	currentApplication->SetImageOutputResolution(glm::vec2(1024, 768)); // glm::vec2(1280, 960)
+	currentApplication->SetSamplesPerPixel(4);
+	currentApplication->SetMinSamplesPerPixel(1);
+	currentApplication->SetAdaptiveCoef(1.f);
+	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
+	currentApplication->SetUseAdaptiveSampler(false);
+	currentApplication->SetOutputFilename("acceleration2-24-4samples.png");
+	currentApplication->SetMaxReflectionBounces(2);
+	currentApplication->SetMaxRefractionBounces(4);
+
+	const std::string logFile = "stats.txt";
+
+	std::fstream fcout;
+	fcout.open(logFile, std::fstream::out | std::fstream::app);
+	fcout << "Samples per pixel " << currentApplication->GetSamplesPerPixel() << std::endl;
+	fcout << "Min samples per pixel " << currentApplication->GetMinSamplesPerPixel() << std::endl;
+	fcout << "Max reflections bounces " << currentApplication->GetMaxReflectionBounces() << std::endl;
+	fcout << "Max refraction bounces " << currentApplication->GetMaxRefractionBounces() << std::endl;
+
     RayTracer rayTracer(std::move(currentApplication));
 
-    DIAGNOSTICS_TIMER(timer, "Ray Tracer");
+    DIAGNOSTICS_TIMER(timer, "Ray Tracer", logFile);
     rayTracer.Run();
     DIAGNOSTICS_END_TIMER(timer);
 
     DIAGNOSTICS_PRINT();
+	DIAGNOSTICS_FILE_PRINT(logFile);
 
 #if defined(_WIN32) && WAIT_ON_EXIT
     int exit = 0;

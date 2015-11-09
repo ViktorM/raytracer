@@ -55,7 +55,7 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
     pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
 
 // Assignment 6 Part 1 TODO: Change the '1' here.
-#define ACCELERATION_TYPE 1
+#define ACCELERATION_TYPE 2
 #if ACCELERATION_TYPE == 0
     newScene->GenerateAccelerationData(AccelerationTypes::NONE);
 #elif ACCELERATION_TYPE == 1
@@ -64,7 +64,7 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
     UniformGridAcceleration* accelerator = dynamic_cast<UniformGridAcceleration*>(newScene->GenerateAccelerationData(AccelerationTypes::UNIFORM_GRID));
     assert(accelerator);
     // Assignment 6 Part 2 TODO: Change the glm::ivec3(10, 10, 10) here.
-    accelerator->SetSuggestedGridSize(glm::ivec3(10, 10, 10));
+    accelerator->SetSuggestedGridSize(glm::ivec3(3, 3, 3));
 #endif    
     newScene->AddLight(pointLight);
 
@@ -74,7 +74,7 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
 std::shared_ptr<ColorSampler> Assignment6::CreateSampler() const
 {
     std::shared_ptr<JitterColorSampler> jitter = std::make_shared<JitterColorSampler>();
-    jitter->SetGridSize(glm::ivec3(1, 1, 1));
+    jitter->SetGridSize(GetGridSize());
     return jitter;
 }
 
@@ -83,16 +83,11 @@ std::shared_ptr<class Renderer> Assignment6::CreateRenderer(std::shared_ptr<Scen
     return std::make_shared<BackwardRenderer>(scene, sampler);
 }
 
-int Assignment6::GetSamplesPerPixel() const
-{
-    return 1;
-}
-
 bool Assignment6::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleIndex)
 {
     return true;
 }
-
+/*
 int Assignment6::GetMaxReflectionBounces() const
 {
     return 2;
@@ -102,8 +97,4 @@ int Assignment6::GetMaxRefractionBounces() const
 {
     return 4;
 }
-
-glm::vec2 Assignment6::GetImageOutputResolution() const
-{
-    return glm::vec2(640.f, 480.f);
-}
+*/

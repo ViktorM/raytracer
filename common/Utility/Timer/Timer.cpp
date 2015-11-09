@@ -1,9 +1,9 @@
 #include "common/Utility/Timer/Timer.h"
 
-Timer::Timer(const std::string& descriptor):
-    storedDescriptor(descriptor), tickHandled(false)
+Timer::Timer(const std::string& descriptor, const std::string& logFile):
+    storedDescriptor(descriptor), fileName(logFile), tickHandled(false)
 {
-    Tick();
+    Tick(fileName);
 }
 
 Timer::~Timer()
@@ -17,13 +17,36 @@ void Timer::Tick()
     tickHandled = false;
 }
 
+void Timer::Tick(const std::string& file)
+{
+	std::fstream fcout;
+	fcout.open(file, std::fstream::out | std::fstream::app);
+
+	fcout << "START " << storedDescriptor << std::endl;
+	startTime = std::chrono::high_resolution_clock::now();
+}
+
 void Timer::Tock()
 {
-    if (tickHandled)  {
+    if (tickHandled)  
+	{
         return;
     }
     tickHandled = false;
-    auto endTime = std::chrono::high_resolution_clock::now();
-    auto totalElapsedTime = std::chrono::duration_cast<std::chrono::duration<double>>(endTime - startTime);
-    std::cout << "END " << storedDescriptor << ": " << totalElapsedTime.count() << " seconds" << std::endl;
+
+	if (0)
+	{
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto totalElapsedTime = std::chrono::duration_cast<std::chrono::duration<double>>(endTime - startTime);
+		std::cout << "END " << storedDescriptor << ": " << totalElapsedTime.count() << " seconds" << std::endl;
+	}
+	else
+	{
+		std::fstream fcout;
+		fcout.open(fileName, std::fstream::out | std::fstream::app);
+
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto totalElapsedTime = std::chrono::duration_cast<std::chrono::duration<double>>(endTime - startTime);
+		fcout << "END " << storedDescriptor << ": " << totalElapsedTime.count() << " seconds" << std::endl;
+	}
 }
