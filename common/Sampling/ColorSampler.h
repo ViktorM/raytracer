@@ -11,6 +11,8 @@ struct SamplerState
     }
 
     std::vector<glm::vec3> colorHistory;
+	std::vector<glm::vec3> positionHistory;
+
     const int maxSamples;
     const int dimensions;
     int samplesComputed;

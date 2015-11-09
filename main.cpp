@@ -25,12 +25,12 @@ int main(int argc, char** argv)
 {
     std::unique_ptr<APPLICATION> currentApplication = make_unique<APPLICATION>();
 	currentApplication->SetImageOutputResolution(glm::vec2(1024, 768)); // glm::vec2(1280, 960)
-	currentApplication->SetSamplesPerPixel(1);
+	currentApplication->SetSamplesPerPixel(4);
 	currentApplication->SetMinSamplesPerPixel(1);
 	currentApplication->SetAdaptiveCoef(1.f);
 	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
 	currentApplication->SetUseAdaptiveSampler(false);
-	currentApplication->SetOutputFilename("acceleration0-24.png");
+	currentApplication->SetOutputFilename("acceleration2-24-4samples.png");
 	currentApplication->SetMaxReflectionBounces(2);
 	currentApplication->SetMaxRefractionBounces(4);
 
