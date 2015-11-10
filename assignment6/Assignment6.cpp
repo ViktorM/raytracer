@@ -54,28 +54,15 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
     pointLight->SetPosition(glm::vec3(0.01909f, 0.0101f, 1.97028f));
     pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
 
-/*
-// Assignment 6 Part 1 TODO: Change the '1' here.
-#define ACCELERATION_TYPE 2
-#if ACCELERATION_TYPE == 0
-    newScene->GenerateAccelerationData(AccelerationTypes::NONE);
-#elif ACCELERATION_TYPE == 1
-    newScene->GenerateAccelerationData(AccelerationTypes::BVH);
-#else
-    UniformGridAcceleration* accelerator = dynamic_cast<UniformGridAcceleration*>(newScene->GenerateAccelerationData(AccelerationTypes::UNIFORM_GRID));
-    assert(accelerator);
-    // Assignment 6 Part 2 TODO: Change the glm::ivec3(10, 10, 10) here.
-    accelerator->SetSuggestedGridSize(glm::ivec3(3, 3, 3));
-#endif
-*/
 	AccelerationTypes accType = GetAcceleratingStructureType();
 	AccelerationStructure* accStructure = newScene->GenerateAccelerationData(accType);
 	if (accType == AccelerationTypes::UNIFORM_GRID)
 	{
 		UniformGridAcceleration* accelerator = dynamic_cast<UniformGridAcceleration*>(accStructure);
 		assert(accelerator);
-		// Assignment 6 Part 2 TODO: Change the glm::ivec3(10, 10, 10) here.
-		accelerator->SetSuggestedGridSize(glm::ivec3(7, 7, 7));
+
+		// To do: implement setting uniform grid size from application
+		accelerator->SetSuggestedGridSize(glm::ivec3(8, 8, 8));
 	}
 
     newScene->AddLight(pointLight);
@@ -99,14 +86,3 @@ bool Assignment6::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleInd
 {
     return true;
 }
-/*
-int Assignment6::GetMaxReflectionBounces() const
-{
-    return 2;
-}
-
-int Assignment6::GetMaxRefractionBounces() const
-{
-    return 4;
-}
-*/

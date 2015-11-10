@@ -28,12 +28,6 @@ public:
 		m_pOutBitmap = FreeImage_Allocate(mWidth, mHeight, 24);
 		mHDRData = new glm::vec3[mWidth * mHeight];
 
-		if (!m_pOutBitmap)
-		{
-			throw std::runtime_error("ERROR: Bitmap failed to initialize.");
-			*this;
-		}
-
 		m_sFileName = other.m_sFileName;
 
 		return *this;

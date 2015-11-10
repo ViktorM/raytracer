@@ -3,7 +3,7 @@
 #include "common/common.h"
 #include "common/Output/ImageWriter.h"
 
-static const int numThreads = 8;
+const static int numThreads = 1;
 
 class ImageWriter;
 

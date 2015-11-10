@@ -24,18 +24,18 @@
 int main(int argc, char** argv)  
 {
     std::unique_ptr<APPLICATION> currentApplication = make_unique<APPLICATION>();
-	currentApplication->SetImageOutputResolution(glm::vec2(1280, 960)); // glm::vec2(1024, 768)
-	currentApplication->SetSamplesPerPixel(1);
-	currentApplication->SetMinSamplesPerPixel(1);
-	currentApplication->SetAdaptiveCoef(1.f);
-	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
-	currentApplication->SetUseAdaptiveSampler(false);
-	currentApplication->SetOutputFilename("Assignment6/test no threads.png");
+	currentApplication->SetImageOutputResolution(glm::vec2(1600, 1200)); // glm::vec2(1024, 768)
+	currentApplication->SetSamplesPerPixel(16);
+	currentApplication->SetMinSamplesPerPixel(8);
+	currentApplication->SetAdaptiveCoef(10.f);
+	currentApplication->SetGridSize(glm::ivec3(4, 4, 4));
+	currentApplication->SetUseAdaptiveSampler(true);
+	currentApplication->SetOutputFilename("Assignment6/profiling 1 thread 1600x1200 BVH 16 samples.png");
 	currentApplication->SetMaxReflectionBounces(2);
 	currentApplication->SetMaxRefractionBounces(4);
-	currentApplication->SetAcceleratingStructureType(1);
+	currentApplication->SetAcceleratingStructureType(2);
 
-	const std::string logFile = "Assignment6/multithreading.txt";
+	const std::string logFile = "Assignment6/profiling.txt";
 
 	std::fstream fcout;
 	fcout.open(logFile, std::fstream::out | std::fstream::app);
@@ -60,13 +60,16 @@ int main(int argc, char** argv)
 		break;
 	} 
 	fcout << std::endl;
+	fcout << "Threads number " << numThreads << std::endl;
 
     RayTracer rayTracer(std::move(currentApplication));
 
-    DIAGNOSTICS_TIMER(timer, "Ray Tracer", logFile);
+	DIAGNOSTICS_TIMER(timer, "Initialization", logFile);
 	rayTracer.Init();
+	DIAGNOSTICS_END_TIMER(timer);
+	DIAGNOSTICS_TIMER(timer2, "Ray Tracer", logFile);
     rayTracer.Run();
-    DIAGNOSTICS_END_TIMER(timer);
+    DIAGNOSTICS_END_TIMER(timer2);
 
     DIAGNOSTICS_PRINT();
 	DIAGNOSTICS_FILE_PRINT(logFile);
