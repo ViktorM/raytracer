@@ -24,17 +24,18 @@
 int main(int argc, char** argv)  
 {
     std::unique_ptr<APPLICATION> currentApplication = make_unique<APPLICATION>();
-	currentApplication->SetImageOutputResolution(glm::vec2(1024, 768)); // glm::vec2(1280, 960)
-	currentApplication->SetSamplesPerPixel(4);
+	currentApplication->SetImageOutputResolution(glm::vec2(1280, 960)); // glm::vec2(1024, 768)
+	currentApplication->SetSamplesPerPixel(1);
 	currentApplication->SetMinSamplesPerPixel(1);
 	currentApplication->SetAdaptiveCoef(1.f);
 	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
 	currentApplication->SetUseAdaptiveSampler(false);
-	currentApplication->SetOutputFilename("acceleration2-24-4samples.png");
+	currentApplication->SetOutputFilename("Assignment6/test no threads.png");
 	currentApplication->SetMaxReflectionBounces(2);
 	currentApplication->SetMaxRefractionBounces(4);
+	currentApplication->SetAcceleratingStructureType(1);
 
-	const std::string logFile = "stats.txt";
+	const std::string logFile = "Assignment6/multithreading.txt";
 
 	std::fstream fcout;
 	fcout.open(logFile, std::fstream::out | std::fstream::app);
@@ -42,10 +43,28 @@ int main(int argc, char** argv)
 	fcout << "Min samples per pixel " << currentApplication->GetMinSamplesPerPixel() << std::endl;
 	fcout << "Max reflections bounces " << currentApplication->GetMaxReflectionBounces() << std::endl;
 	fcout << "Max refraction bounces " << currentApplication->GetMaxRefractionBounces() << std::endl;
+	fcout << "Acceleration structure ";
+	switch (static_cast<int>(currentApplication->GetAcceleratingStructureType()))
+	{
+	case 0:
+		fcout << "NONE";
+		break;
+	case 1:
+		fcout << "UNIFORM_GRID";
+		break;
+	case 2:
+		fcout << "BVH";
+		break;
+	default:
+		fcout << "Unknown type";
+		break;
+	} 
+	fcout << std::endl;
 
     RayTracer rayTracer(std::move(currentApplication));
 
     DIAGNOSTICS_TIMER(timer, "Ray Tracer", logFile);
+	rayTracer.Init();
     rayTracer.Run();
     DIAGNOSTICS_END_TIMER(timer);
 

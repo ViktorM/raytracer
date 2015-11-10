@@ -14,7 +14,8 @@ ImageWriter::ImageWriter(std::string inFile, int inWidth, int inHeight) : mWidth
     m_pOutBitmap = FreeImage_Allocate(mWidth, mHeight, 24);
     mHDRData = new glm::vec3[mWidth * mHeight];
 
-    if (!m_pOutBitmap) {
+    if (!m_pOutBitmap) 
+	{
         throw std::runtime_error("ERROR: Bitmap failed to initialize.");
         return;
     }
@@ -42,8 +43,10 @@ void ImageWriter::SetPixelColor(glm::vec3 inColor, int inX, int inY)
 
 void ImageWriter::CopyHDRToBitmap()
 {
-    for (int x = 0; x < mWidth; ++x) {
-        for (int y = 0; y < mHeight; ++y) {
+    for (int x = 0; x < mWidth; ++x) 
+	{
+        for (int y = 0; y < mHeight; ++y) 
+		{
             int linearIdx = y * mWidth + x;
             SetFinalPixelColor(mHDRData[linearIdx], x, y);
         }

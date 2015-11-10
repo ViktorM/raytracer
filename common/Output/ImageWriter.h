@@ -11,6 +11,34 @@ public:
     ImageWriter(std::string, int, int);
     ~ImageWriter();
 
+	// No copy yet just initializing
+	ImageWriter& operator = (ImageWriter other)
+	{
+		delete[] mHDRData;
+		FreeImage_DeInitialise();
+
+		mWidth = other.mWidth;
+		mHeight = other.mHeight;
+
+		// Initialize Free Image and get it ready to do stuff
+		FreeImage_Initialise();
+
+		// Create Bitmap and check if it's valid
+		// Hard-code bits per pixel to 24 for now since we're just doing RBG (no alpha)
+		m_pOutBitmap = FreeImage_Allocate(mWidth, mHeight, 24);
+		mHDRData = new glm::vec3[mWidth * mHeight];
+
+		if (!m_pOutBitmap)
+		{
+			throw std::runtime_error("ERROR: Bitmap failed to initialize.");
+			*this;
+		}
+
+		m_sFileName = other.m_sFileName;
+
+		return *this;
+	}
+
     glm::vec3 GetHDRPixelColor(int inX, int inY) const;
     // this function will stored in a float array to support HDR.
     void SetPixelColor(glm::vec3, int, int);
@@ -29,7 +57,7 @@ private:
     int mHeight;
 
     // Float data
-    glm::vec3* mHDRData;
+    glm::vec3*	mHDRData;
 
     // Bitmap file
     FIBITMAP*	m_pOutBitmap;

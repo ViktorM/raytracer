@@ -79,6 +79,21 @@ public:
 	// Whether or not to continue sampling the scene from the camera.
 	virtual bool NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleIndex) = 0;
 
+	virtual void SetAcceleratingStructureType(int accelerationStructureType)
+	{
+		accelerationStructure = static_cast<AccelerationTypes>(accelerationStructureType);
+	}
+
+	virtual void SetAcceleratingStructureType(AccelerationTypes accelerationStructureType)
+	{
+		accelerationStructure = accelerationStructureType;
+	}
+
+	virtual AccelerationTypes GetAcceleratingStructureType() const
+	{
+		return accelerationStructure;
+	}
+
 	// Postprocessing
 	virtual void PerformImagePostprocessing(class ImageWriter& imageWriter);
 
@@ -104,6 +119,8 @@ private:
 	bool		usePoissonDisksSampler;
 	bool		useAdaptiveSampler;
 	float		adaptiveCoef;
+
+	AccelerationTypes accelerationStructure;
 
 	glm::vec2	imageResolution;
 	std::string	fileName;
