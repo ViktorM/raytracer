@@ -1,6 +1,6 @@
 #include "common/RayTracer.h"
 
-#define ASSIGNMENT 6
+#define ASSIGNMENT 7
 #if ASSIGNMENT == 5
 #define APPLICATION Assignment5
 #include "assignment5/Assignment5.h"
@@ -25,17 +25,17 @@ int main(int argc, char** argv)
 {
     std::unique_ptr<APPLICATION> currentApplication = make_unique<APPLICATION>();
 	currentApplication->SetImageOutputResolution(glm::vec2(1600, 1200)); // glm::vec2(1024, 768)
-	currentApplication->SetSamplesPerPixel(16);
-	currentApplication->SetMinSamplesPerPixel(8);
+	currentApplication->SetSamplesPerPixel(1);
+	currentApplication->SetMinSamplesPerPixel(1);
 	currentApplication->SetAdaptiveCoef(10.f);
-	currentApplication->SetGridSize(glm::ivec3(4, 4, 4));
-	currentApplication->SetUseAdaptiveSampler(true);
-	currentApplication->SetOutputFilename("Assignment6/profiling 1 thread 1600x1200 BVH 16 samples.png");
-	currentApplication->SetMaxReflectionBounces(2);
-	currentApplication->SetMaxRefractionBounces(4);
-	currentApplication->SetAcceleratingStructureType(2);
+	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
+	currentApplication->SetUseAdaptiveSampler(false);
+	currentApplication->SetOutputFilename("Assignment7/test.png");
+	currentApplication->SetMaxReflectionBounces(0);
+	currentApplication->SetMaxRefractionBounces(0);
+	currentApplication->SetAcceleratingStructureType(0);
 
-	const std::string logFile = "Assignment6/profiling.txt";
+	const std::string logFile = "Assignment7/test.txt";
 
 	std::fstream fcout;
 	fcout.open(logFile, std::fstream::out | std::fstream::app);
