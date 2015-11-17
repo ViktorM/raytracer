@@ -30,7 +30,8 @@ glm::vec3 ColorSampler::ComputeSamplesAndColor(const int maxSamples, const int d
         finalColor += sampleColor;
         ++newState->samplesComputed;
 
-        if (NotifyColorSampleForEarlyExit(*newState.get(), sampleColor)) {
+        if (NotifyColorSampleForEarlyExit(*newState.get(), sampleColor)) 
+		{
             break;
         }
 
@@ -44,7 +45,8 @@ glm::vec3 ColorSampler::ComputeSamplesAndColor(const int maxSamples, const int d
 glm::vec3 ColorSampler::ComputeSampleCoordinate(SamplerState& state) const
 {
     glm::vec3 sample;
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 3; ++i) 
+	{
         sample[i] = GenerateRandomNumber(state);
     }
     return sample;

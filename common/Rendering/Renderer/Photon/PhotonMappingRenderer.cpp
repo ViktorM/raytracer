@@ -12,11 +12,12 @@
 #include "glm/gtx/component_wise.hpp"
 
 #define VISUALIZE_PHOTON_MAPPING 1
+#define STORE_ABSORBED 1
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
-    diffusePhotonNumber(1000000),
-    maxPhotonBounces(1000)
+    diffusePhotonNumber(1000000), // 1000000
+    maxPhotonBounces(1000) // 1000
 {
     srand(static_cast<unsigned int>(time(NULL)));
 }
@@ -70,16 +71,99 @@ void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, 
     }
 }
 
+
 void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces)
 {
-	Photon myPhoton;
-	// ... set photon properties ...
-	photonMap.insert(myPhoton);
-
+	if (remainingBounces < 0)
+	{
+		return;
+	}
 
     assert(photonRay);
     IntersectionState state(0, 0);
     state.currentIOR = currentIOR;
+
+	bool hit = storedScene->Trace(photonRay, &state);
+	if (!hit)
+	{
+		return;
+	}
+
+	glm::vec3 intersectionPoint = state.intersectionRay.GetRayPosition(state.intersectionT);
+	glm::vec3 norm = state.ComputeNormal();
+
+	// Move intersection point above the surface
+	intersectionPoint += LARGE_EPSILON * norm;
+
+	const MeshObject* hitMeshObject = state.intersectedPrimitive->GetParentMeshObject();
+	const Material* hitMaterial = hitMeshObject->GetMaterial();	const glm::vec3 diffuseColor = hitMaterial->GetBaseDiffuseReflection();
+
+	Photon myPhoton;
+	myPhoton.position = intersectionPoint;
+	myPhoton.intensity = lightIntensity;
+	myPhoton.toLightRay = Ray(intersectionPoint, -photonRay->GetRayDirection());
+
+#if STORE_ABSORBED
+	if (path.size() > 1)
+	{
+		photonMap.insert(myPhoton);
+	}
+#endif
+
+	float reflectionPr = std::max(diffuseColor.x, std::max(diffuseColor.y, diffuseColor.z));	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<float> dist(0.0, std::nextafter(1.f, FLT_MAX));
+
+	float rx = dist(mt);
+	if (rx > reflectionPr)
+	{
+		return;
+	}
+
+#if !STORE_ABSORBED
+	if (path.size() > 1)
+	{
+		photonMap.insert(myPhoton);
+	}
+#endif
+
+	Ray reflectionRay;
+	std::random_device rd2;
+	std::mt19937 mt2(rd2());
+	std::uniform_real_distribution<float> distXY(-1.0, std::nextafter(1.f, FLT_MAX));
+	std::uniform_real_distribution<float> distZ(0.0, std::nextafter(1.f, FLT_MAX));
+
+	float x, y, z;
+	do
+	{
+		x = distXY(mt2);
+		y = distXY(mt2);
+		z = distZ(mt2);
+	} while (x*x + y*y + z*z > 1.f);
+
+	glm::vec3 rayDirection = glm::normalize(glm::vec3(x, y, z));
+
+	glm::vec3 mult = glm::vec3(1.f, 0.f, 0.f);
+	float areParallel = std::abs(dot(norm, mult));
+
+	if (std::abs(1.f - areParallel) <= 100.f * LARGE_EPSILON)
+	{
+		mult = glm::vec3(0.f, 1.f, 0.f);
+	}
+
+	glm::vec3 tang = cross(norm, mult);
+	glm::vec3 bitang = cross(norm, tang);
+
+	glm::mat3x3 transform = glm::mat3x3(glm::normalize(tang), glm::normalize(bitang), glm::normalize(norm));
+	rayDirection = transform * rayDirection;
+
+	reflectionRay.SetRayPosition(intersectionPoint);
+	reflectionRay.SetRayDirection(rayDirection);
+
+	--remainingBounces;
+
+	path.push_back('R');
+	TracePhoton(photonMap, &reflectionRay, lightIntensity, path, currentIOR, remainingBounces); // lightIntensity?
 }
 
 glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const

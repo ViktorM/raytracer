@@ -22,7 +22,8 @@ std::shared_ptr<Scene> Assignment7::CreateScene() const
     // Objects
     std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
     std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Photon.obj", &loadedMaterials);
-    for (size_t i = 0; i < cubeObjects.size(); ++i) {
+    for (size_t i = 0; i < cubeObjects.size(); ++i) 
+	{
         std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
         materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
         cubeObjects[i]->SetMaterial(materialCopy);
@@ -43,6 +44,7 @@ std::shared_ptr<Scene> Assignment7::CreateScene() const
     return newScene;
 
 }
+
 std::shared_ptr<ColorSampler> Assignment7::CreateSampler() const
 {
     std::shared_ptr<JitterColorSampler> jitter = std::make_shared<JitterColorSampler>();
@@ -54,24 +56,8 @@ std::shared_ptr<class Renderer> Assignment7::CreateRenderer(std::shared_ptr<Scen
 {
     return std::make_shared<PhotonMappingRenderer>(scene, sampler);
 }
-/*
-int Assignment7::GetSamplesPerPixel() const
-{
-    return 1;
-}
-*/
+
 bool Assignment7::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleIndex)
 {
     return true;
 }
-/*
-int Assignment7::GetMaxReflectionBounces() const
-{
-    return 0;
-}
-
-int Assignment7::GetMaxRefractionBounces() const
-{
-    return 0;
-}
-*/

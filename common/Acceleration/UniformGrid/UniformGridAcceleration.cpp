@@ -19,13 +19,15 @@ void UniformGridAcceleration::InternalInitialization()
 #if !DISABLE_ACCELERATION_CREATION_TIMER
     DIAGNOSTICS_TIMER(timer, "Uniform Grid Creation Time");
 #endif
-    for (size_t i = 0; i < nodes.size(); ++i) {
+    for (size_t i = 0; i < nodes.size(); ++i) 
+	{
         gridBoundingBox.IncludeBox(nodes[i]->GetBoundingBox());
     }
 
     glm::vec3 gridDiagonal = gridBoundingBox.maxVertex - gridBoundingBox.minVertex;
     for (int i = 0; i < 3; ++i) {
-        if (std::abs(gridDiagonal[i]) < LARGE_EPSILON) {
+        if (std::abs(gridDiagonal[i]) < LARGE_EPSILON) 
+		{
             // Arbitrary Expansion
             gridBoundingBox.maxVertex[i] += 0.1f;
             gridBoundingBox.minVertex[i] -= 0.1f;
@@ -36,7 +38,8 @@ void UniformGridAcceleration::InternalInitialization()
     glm::vec3 voxelSize = gridDiagonal / glm::vec3(gridSize);
     voxelGrid = make_unique<VoxelGrid>(gridBoundingBox, gridSize, voxelSize);
 
-    for (size_t i = 0; i < nodes.size(); ++i) {
+    for (size_t i = 0; i < nodes.size(); ++i) 
+	{
         voxelGrid->AddNodeToGrid(nodes[i]);
     }
 }

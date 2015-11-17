@@ -30,12 +30,12 @@ int main(int argc, char** argv)
 	currentApplication->SetAdaptiveCoef(10.f);
 	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
 	currentApplication->SetUseAdaptiveSampler(false);
-	currentApplication->SetOutputFilename("Assignment7/test.png");
+	currentApplication->SetOutputFilename("Assignment7/PM reflections1000 1000000 photons2.png");
 	currentApplication->SetMaxReflectionBounces(0);
 	currentApplication->SetMaxRefractionBounces(0);
-	currentApplication->SetAcceleratingStructureType(0);
+	currentApplication->SetAcceleratingStructureType(1);
 
-	const std::string logFile = "Assignment7/test.txt";
+	const std::string logFile = "Assignment7/Photon Mapping.txt";
 
 	std::fstream fcout;
 	fcout.open(logFile, std::fstream::out | std::fstream::app);

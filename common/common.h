@@ -9,6 +9,7 @@
 #include <cassert>
 #include <limits>
 #include <cmath>
+#include <random>
 #include <array>
 #include <functional>
 #include <sstream>
