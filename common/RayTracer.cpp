@@ -129,7 +129,6 @@ void RayTracer::Run2()
 				{
                     sampleColor = currentRenderer->ComputeSampleColor(rayIntersection, *cameraRay.get());
                 }
-
                 return sampleColor;
             }), c, r);
         }
