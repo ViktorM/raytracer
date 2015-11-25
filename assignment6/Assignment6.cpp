@@ -70,6 +70,7 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
     return newScene;
 
 }
+
 std::shared_ptr<ColorSampler> Assignment6::CreateSampler() const
 {
     std::shared_ptr<JitterColorSampler> jitter = std::make_shared<JitterColorSampler>();

@@ -7,6 +7,7 @@ struct Photon
 {
     typedef float value_type;
     glm::vec3 position;
+	glm::vec3 normal;
     glm::vec3 intensity;
     Ray toLightRay;
     

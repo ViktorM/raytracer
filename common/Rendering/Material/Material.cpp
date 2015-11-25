@@ -15,7 +15,8 @@ Material::~Material()
 
 Texture* Material::GetTexture(const std::string& id) const
 {
-    if (textureStorage.find(id) == textureStorage.end()) {
+    if (textureStorage.find(id) == textureStorage.end()) 
+	{
         return nullptr;
     }
     return textureStorage.at(id).get();
@@ -28,7 +29,8 @@ glm::vec3 Material::ComputeNonLightDependentBRDF(const class Renderer* renderer,
     return reflectivity * reflectionColor + transmittance * transmissionColor + ambient;
 }
 
-glm::vec3 Material::ComputeBRDF(const struct IntersectionState& intersection, const glm::vec3& lightColor, const class Ray& toLightRay, const class Ray& fromCameraRay, float lightAttenuation, bool computeDiffuse, bool computeSpecular) const
+glm::vec3 Material::ComputeBRDF(const struct IntersectionState& intersection, const glm::vec3& lightColor, const class Ray& toLightRay, 
+								const class Ray& fromCameraRay, float lightAttenuation, bool computeDiffuse, bool computeSpecular) const
 {
     const glm::vec3 N = intersection.ComputeNormal();
     const glm::vec3 L = toLightRay.GetRayDirection();
@@ -47,12 +49,14 @@ glm::vec3 Material::ComputeBRDF(const struct IntersectionState& intersection, co
     return attenuation * (diffuseColor + specularColor);
 }
 
-glm::vec3 Material::ComputeDiffuse(const struct IntersectionState& intersection, const glm::vec3& lightColor, const float NdL, const float NdH, const float NdV, const float VdH) const
+glm::vec3 Material::ComputeDiffuse(const struct IntersectionState& intersection, const glm::vec3& lightColor, 
+									const float NdL, const float NdH, const float NdV, const float VdH) const
 {
     return glm::vec3();
 }
 
-glm::vec3 Material::ComputeSpecular(const struct IntersectionState& intersection, const glm::vec3& lightColor, const float NdL, const float NdH, const float NdV, const float VdH) const
+glm::vec3 Material::ComputeSpecular(const struct IntersectionState& intersection, const glm::vec3& lightColor, 
+									const float NdL, const float NdH, const float NdV, const float VdH) const
 {
     return glm::vec3();
 }
@@ -60,7 +64,8 @@ glm::vec3 Material::ComputeSpecular(const struct IntersectionState& intersection
 glm::vec3 Material::ComputeReflection(const class Renderer* renderer, const struct IntersectionState& intersection) const
 {
     glm::vec3 reflectedColor;
-    if (intersection.reflectionIntersection && intersection.reflectionIntersection->hasIntersection) {
+    if (intersection.reflectionIntersection && intersection.reflectionIntersection->hasIntersection) 
+	{
         reflectedColor = renderer->ComputeSampleColor(*intersection.reflectionIntersection.get(), intersection.reflectionIntersection->intersectionRay);
     }
     return reflectedColor;
@@ -69,7 +74,8 @@ glm::vec3 Material::ComputeReflection(const class Renderer* renderer, const stru
 glm::vec3 Material::ComputeTransmission(const class Renderer* renderer, const struct IntersectionState& intersection) const
 {
     glm::vec3 transmissionColor;
-    if (intersection.refractionIntersection && intersection.refractionIntersection->hasIntersection) {
+    if (intersection.refractionIntersection && intersection.refractionIntersection->hasIntersection) 
+	{
         transmissionColor = renderer->ComputeSampleColor(*intersection.refractionIntersection.get(), intersection.refractionIntersection->intersectionRay);
     }
     return transmissionColor;
@@ -92,13 +98,16 @@ void Material::SetIOR(float input)
 
 void Material::LoadMaterialFromAssimp(std::shared_ptr<struct aiMaterial> assimpMaterial)
 {
-    if (!assimpMaterial) {
+    if (!assimpMaterial) 
+	{
         return;
     }
 
     float opacity;
     assimpMaterial->Get(AI_MATKEY_OPACITY, &opacity, nullptr);
     transmittance = 1.f - opacity;
+
+	assimpMaterial->Get(AI_MATKEY_REFLECTIVITY, &reflectivity, nullptr);
 
     assimpMaterial->Get(AI_MATKEY_REFRACTI, &indexOfRefraction, nullptr);
     assimpMaterial->Get(AI_MATKEY_COLOR_AMBIENT, glm::value_ptr(ambient), nullptr);

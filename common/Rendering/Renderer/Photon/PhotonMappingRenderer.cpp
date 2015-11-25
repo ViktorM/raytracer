@@ -11,13 +11,14 @@
 #include "common/Rendering/Material/Material.h"
 #include "glm/gtx/component_wise.hpp"
 
-#define VISUALIZE_PHOTON_MAPPING 1
-#define STORE_ABSORBED 1
+#define VISUALIZE_PHOTON_MAPPING 0
+#define ENABLE_GATHER 1
+
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
-    diffusePhotonNumber(1000000), // 1000000
-    maxPhotonBounces(1000) // 1000
+    diffusePhotonNumber(1000000), // 2000000
+    maxPhotonBounces(20) // 1000
 {
     srand(static_cast<unsigned int>(time(NULL)));
 }
@@ -37,11 +38,11 @@ void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, 
     for (size_t i = 0; i < totalLights; ++i) 
 	{
         const Light* currentLight = storedScene->GetLightObject(i);
-        if (!currentLight) 
+        if (!currentLight)
 		{
             continue;
         }
-        totalLightIntensity = glm::length(currentLight->GetLightColor());
+        totalLightIntensity += glm::length(currentLight->GetLightColor());
     }
 
     // Shoot photons -- number of photons for light is proportional to the light's intensity relative to the total light intensity of the scene.
@@ -96,36 +97,46 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
 	intersectionPoint += LARGE_EPSILON * norm;
 
 	const MeshObject* hitMeshObject = state.intersectedPrimitive->GetParentMeshObject();
-	const Material* hitMaterial = hitMeshObject->GetMaterial();	const glm::vec3 diffuseColor = hitMaterial->GetBaseDiffuseReflection();
+	const Material* hitMaterial = hitMeshObject->GetMaterial();
+	const glm::vec3 diffuseColor = hitMaterial->GetBaseDiffuseReflection();
+	const glm::vec3 specularColor = hitMaterial->GetBaseSpecularReflection();
+	const glm::vec3 transmittanceColor = hitMaterial->GetBaseTransmittance();
+
+	float Pr = std::max(diffuseColor.x + specularColor.x, std::max(diffuseColor.y + specularColor.y, diffuseColor.z + specularColor.z));
+	float total = diffuseColor.x + diffuseColor.y + diffuseColor.z + specularColor.x + specularColor.y + specularColor.z;
+
+	float diffusePr = (diffuseColor.x + diffuseColor.y + diffuseColor.z) * Pr / total;
+	float specularPr = (specularColor.x + specularColor.y + specularColor.z) * Pr / total;
+
+
+	glm::vec3 newLightIntensity = lightIntensity / Pr;
+	newLightIntensity *= diffuseColor;
 
 	Photon myPhoton;
 	myPhoton.position = intersectionPoint;
-	myPhoton.intensity = lightIntensity;
+	myPhoton.normal = norm;
+	myPhoton.intensity = lightIntensity; // newLightIntensity; 
 	myPhoton.toLightRay = Ray(intersectionPoint, -photonRay->GetRayDirection());
 
-#if STORE_ABSORBED
-	if (path.size() > 1)
-	{
-		photonMap.insert(myPhoton);
-	}
-#endif
-
-	float reflectionPr = std::max(diffuseColor.x, std::max(diffuseColor.y, diffuseColor.z));	std::random_device rd;
+	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<float> dist(0.0, std::nextafter(1.f, FLT_MAX));
 
 	float rx = dist(mt);
-	if (rx > reflectionPr)
+	if (rx > Pr)
 	{
+		if (path.size() > 1)
+			photonMap.insert(myPhoton);
+
 		return;
 	}
 
-#if !STORE_ABSORBED
+	myPhoton.intensity = newLightIntensity;
+
 	if (path.size() > 1)
 	{
 		photonMap.insert(myPhoton);
 	}
-#endif
 
 	Ray reflectionRay;
 	std::random_device rd2;
@@ -162,27 +173,154 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
 
 	--remainingBounces;
 
-	path.push_back('R');
-	TracePhoton(photonMap, &reflectionRay, lightIntensity, path, currentIOR, remainingBounces); // lightIntensity?
+	path.push_back('D');
+	TracePhoton(photonMap, &reflectionRay, newLightIntensity, path, currentIOR, remainingBounces);
 }
 
 glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const
 {
     glm::vec3 finalRenderColor = BackwardRenderer::ComputeSampleColor(intersection, fromCameraRay);
+	glm::vec3 additionalColor = glm::vec3(0.f, 0.f, 0.f);
 
 #if VISUALIZE_PHOTON_MAPPING
     Photon intersectionVirtualPhoton;
     intersectionVirtualPhoton.position = intersection.intersectionRay.GetRayPosition(intersection.intersectionT);
 
     std::vector<Photon> foundPhotons;
-    diffuseMap.find_within_range(intersectionVirtualPhoton, 0.003f, std::back_inserter(foundPhotons));
+    diffuseMap.find_within_range(intersectionVirtualPhoton, 0.001f, std::back_inserter(foundPhotons)); // 0.003f
     if (!foundPhotons.empty()) 
 	{
-        finalRenderColor += glm::vec3(1.f, 0.f, 0.f);
+        finalRenderColor += glm::vec3(1.f, 1.f, 1.f); // glm::vec3(1.f, 0.f, 0.f);
     }
+
+#else 
+#if ENABLE_GATHER
+	if (intersection.hasIntersection)
+	{
+		glm::vec3 intersectionPoint = intersection.intersectionRay.GetRayPosition(intersection.intersectionT);
+		Photon intersectionVirtualPhoton;
+		intersectionVirtualPhoton.position = intersectionPoint;
+
+		std::vector<Photon> foundPhotons;
+
+		float radius = 0.05f; // 0.01 - good result
+		int n = 100; // 300/2000000 150/1000000;
+
+		float area = radius * radius;
+
+		diffuseMap.find_within_range(intersectionVirtualPhoton, radius, std::back_inserter(foundPhotons));
+#if 0
+		std::sort(foundPhotons.begin(), foundPhotons.end(), [intersectionPoint](Photon a, Photon b)
+		{
+			return glm::dot(a.position - intersectionPoint, a.position - intersectionPoint) < dot(b.position - intersectionPoint, b.position - intersectionPoint);
+		});
 #endif
 
-    return finalRenderColor;
+		const MeshObject* hitMeshObject = intersection.intersectedPrimitive->GetParentMeshObject();
+		const Material* hitMaterial = hitMeshObject->GetMaterial();
+
+		int sz = foundPhotons.size();	// temp
+		float r = radius;				// temp
+		int count = 0;
+		float minArea = 0.f;
+		for (int i = 0; i < sz; ++i)
+		{
+			Photon photon = foundPhotons[i];
+
+			const glm::vec3 N = intersection.ComputeNormal();
+			if (std::abs(glm::dot(photon.normal, N) - 1.f) > 1000.f * LARGE_EPSILON)
+				continue;
+
+			const glm::vec3 L = photon.toLightRay.GetRayDirection();
+			const glm::vec3 V = -1.f * fromCameraRay.GetRayDirection();
+			const glm::vec3 H = glm::normalize(L + V);
+
+			const float NdL = std::min(std::max(glm::dot(N, L), 0.f), 1.f);
+			const float NdH = std::min(std::max(glm::dot(N, H), 0.f), 1.f);
+			const float NdV = std::min(std::max(glm::dot(N, V), 0.f), 1.f);
+			const float VdH = std::min(std::max(glm::dot(V, H), 0.f), 1.f);
+
+			glm::vec3 diffuseColor = hitMaterial->ComputeDiffuse(intersection, photon.intensity, NdL, NdH, NdV, VdH);
+			glm::vec3 specularColor = hitMaterial->ComputeSpecular(intersection, photon.intensity, NdL, NdH, NdV, VdH);
+
+			glm::vec3 brdfColor = hitMaterial->ComputeBRDF(intersection, photon.intensity, photon.toLightRay, fromCameraRay, 1.f, true, true);
+
+			float modV = glm::dot(brdfColor, brdfColor);
+			float maxC = std::max(brdfColor.x, std::max(brdfColor.y, brdfColor.z));
+
+			float scale = 2.7f * maxC * maxC / modV; // 3.f
+			if (scale > 0.1f && scale < 4.f)
+			{
+				brdfColor = brdfColor * scale;
+			}
+
+			float distSqr = glm::dot(intersectionPoint - photon.position, intersectionPoint - photon.position);
+			float dist = sqrt(0.5f * distSqr); // square to sphere
+
+			minArea = distSqr > minArea ? distSqr : minArea;
+
+		//	float dist = std::max(std::abs((intersectionPoint - photon.position).x),
+		//				std::max(std::abs((intersectionPoint - photon.position).y), std::abs((intersectionPoint - photon.position).z)));
+
+			count++;
+			float noweight = 1.f;
+
+			// Cone filter
+			float k = 1;
+			float norm = 1.f - 2.f / (3.f * k);
+			float weight = 1.f / norm * (1.f - k * dist / r); 
+
+			// Gauss filter
+			float alpha = 0.918;
+			float beta = 1.953;
+//			float gaussW = alpha * (1.f - (1.f - pow(e())/());
+			
+			float weight2 = 3.f * (1.f - sqrt(dist / r));
+			float weight4 = 5.f * (1.f - sqrt(sqrt(dist / r)));
+			additionalColor += weight * brdfColor; // photon.intensity;
+#if 0
+			if (count > n)
+				break;
+#endif
+		}
+		if (minArea > 0.f && minArea < area && count > 2)
+			area = minArea;
+
+		finalRenderColor += additionalColor / area;
+	}
+#else
+
+//	finalRenderColor += 0.1f * glm::normalize(additionalColor);
+	if (additionalColor.x > additionalColor.y)
+	{
+		if (additionalColor.x > additionalColor.z)
+		{
+			finalRenderColor += glm::vec3(1.f, 0.f, 0.f);
+		} 
+		else
+		{
+			finalRenderColor += glm::vec3(0.f, 0.f, 1.f);
+		}
+	}
+	else if (additionalColor.y > additionalColor.x)
+	{
+		if (additionalColor.y > additionalColor.z)
+		{
+			finalRenderColor += glm::vec3(0.f, 1.f, 0.f);
+		}
+		else
+		{
+			finalRenderColor += glm::vec3(0.f, 0.f, 1.f);
+		}
+	}
+	else
+	{
+//		finalRenderColor += glm::vec3(0.8f, 0.8f, 0.8f);
+	}
+#endif
+#endif
+
+	return finalRenderColor;
 }
 
 void PhotonMappingRenderer::SetNumberOfDiffusePhotons(int diffuse)

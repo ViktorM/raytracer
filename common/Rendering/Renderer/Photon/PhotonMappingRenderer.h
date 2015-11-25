@@ -18,8 +18,12 @@ public:
 private:
     using PhotonKdtree = KDTree::KDTree<3, Photon, PhotonAccessor>;
     PhotonKdtree diffuseMap;
+	PhotonKdtree causticMap;
+	PhotonKdtree volumeMap;
 
     int diffusePhotonNumber;
+	int causticPhotonNumber;
+
     int maxPhotonBounces;
 
     void GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons);

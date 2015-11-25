@@ -18,7 +18,8 @@ void BackwardRenderer::InitializeRenderer()
 
 glm::vec3 BackwardRenderer::ComputeSampleColor(const IntersectionState& intersection, const Ray& fromCameraRay) const
 {
-    if (!intersection.hasIntersection) {
+    if (!intersection.hasIntersection) 
+	{
         return glm::vec3();
     }
 
@@ -31,7 +32,8 @@ glm::vec3 BackwardRenderer::ComputeSampleColor(const IntersectionState& intersec
 
     // Compute the color at the intersection.
     glm::vec3 sampleColor;
-    for (size_t i = 0; i < storedScene->GetTotalLights(); ++i) {
+    for (size_t i = 0; i < storedScene->GetTotalLights(); ++i) 
+	{
         const Light* light = storedScene->GetLightObject(i);
         assert(light);
 
@@ -39,9 +41,11 @@ glm::vec3 BackwardRenderer::ComputeSampleColor(const IntersectionState& intersec
         std::vector<Ray> sampleRays;
         light->ComputeSampleRays(sampleRays, intersectionPoint, intersection.ComputeNormal());
 
-        for (size_t s = 0; s < sampleRays.size(); ++s) {
+        for (size_t s = 0; s < sampleRays.size(); ++s) 
+		{
             // note that max T should be set to be right before the light.
-            if (storedScene->Trace(&sampleRays[s], nullptr)) {
+            if (storedScene->Trace(&sampleRays[s], nullptr)) 
+			{
                 continue;
             }
             const float lightAttenuation = light->ComputeLightAttenuation(intersectionPoint);
