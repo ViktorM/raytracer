@@ -25,17 +25,17 @@ int main(int argc, char** argv)
 {
     std::unique_ptr<APPLICATION> currentApplication = make_unique<APPLICATION>();
 	currentApplication->SetImageOutputResolution(glm::vec2(1024, 768)); // (glm::vec2(1600, 1200)) (1280, 960) (1024, 768)
-	currentApplication->SetSamplesPerPixel(8);
+	currentApplication->SetSamplesPerPixel(2);
 	currentApplication->SetMinSamplesPerPixel(1);
 	currentApplication->SetAdaptiveCoef(10.f);
-	currentApplication->SetGridSize(glm::ivec3(2, 2, 1));
+	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
 	currentApplication->SetUseAdaptiveSampler(false);
-	currentApplication->SetOutputFilename("Assignment8/Cornell Sphere 8 samples grid2x2.png");
+	currentApplication->SetOutputFilename("Assignment8/Caustics/A8 500000 transparent + reflection 2.0 2 samples 2 lights.png");
 	currentApplication->SetMaxReflectionBounces(3);
-	currentApplication->SetMaxRefractionBounces(4);
+	currentApplication->SetMaxRefractionBounces(5);
 	currentApplication->SetAcceleratingStructureType(1);
 
-	const std::string logFile = "Assignment8/Test.txt";
+	const std::string logFile = "Assignment8/Caustics/Caustics.txt";
 
 	std::fstream fcout;
 	fcout.open(logFile, std::fstream::out | std::fstream::app);

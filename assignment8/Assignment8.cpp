@@ -61,6 +61,11 @@ std::shared_ptr<Scene> Assignment8::CreateScene3() const // main
 	{
         std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
         materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
+		if (i == -1)
+		{
+			materialCopy->SetTransmittance(0.8f);
+			materialCopy->SetIOR(1.5f);
+		}
         cubeObjects[i]->SetMaterial(materialCopy);
     }
 
@@ -97,17 +102,17 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
 	{
 		std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
 		materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
-//		materialCopy->SetAmbient(glm::vec3(0.3f, 0.3f, 0.3f));
+		materialCopy->SetAmbient(glm::vec3(0.0f, 0.0f, 0.0f));
 
 		if (i == 0)
 		{
-			materialCopy->SetReflectivity(0.7f);
+			materialCopy->SetReflectivity(0.8f);
 		}
 
 		if (i == 1)
 		{
-			materialCopy->SetTransmittance(0.8f);
-			materialCopy->SetIOR(1.5f);
+			materialCopy->SetTransmittance(0.95f);
+			materialCopy->SetIOR(2.f);
 		}
 
 		cubeObjects[i]->SetMaterial(materialCopy);
@@ -121,11 +126,9 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
 
 	// Lights
 	std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();
-//	pointLight->SetPosition(glm::vec3(-0.005f, -0.03f, 1.5800f));
-
-	pointLight->SetPosition(glm::vec3(0.01909f, 0.0101f, 1.57028f));
-	pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
-//	newScene->AddLight(pointLight);
+	pointLight->SetPosition(glm::vec3(0.05909f, 0.0501f, 1.5628f)); // glm::vec3(0.01909f, 0.0101f, 1.5328f)
+	pointLight->SetLightColor(glm::vec3(0.1f, 0.3f, 0.1f)); 
+	newScene->AddLight(pointLight);
 
 	std::shared_ptr<PointLight> pointLight2 = std::make_shared<PointLight>();
 	pointLight2->SetPosition(glm::vec3(-0.005f, -0.01f, 1.5328f));
@@ -238,8 +241,8 @@ std::shared_ptr<ColorSampler> Assignment8::CreateSampler() const
 
 std::shared_ptr<class Renderer> Assignment8::CreateRenderer(std::shared_ptr<Scene> scene, std::shared_ptr<ColorSampler> sampler) const
 {
-	return std::make_shared<BackwardRenderer>(scene, sampler);
-//	return std::make_shared<PhotonMappingRenderer>(scene, sampler);
+//	return std::make_shared<BackwardRenderer>(scene, sampler);
+	return std::make_shared<PhotonMappingRenderer>(scene, sampler);
 }
 
 bool Assignment8::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleIndex)

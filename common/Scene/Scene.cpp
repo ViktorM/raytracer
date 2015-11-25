@@ -88,7 +88,8 @@ void Scene::PerformRayRefraction(Ray& outputRay, const Ray& inputRay, const glm:
 
 void Scene::AddSceneObject(std::shared_ptr<SceneObject> object)
 {
-    if (!object) {
+    if (!object) 
+	{
         return;
     }
     sceneObjects.emplace_back(std::move(object));
@@ -96,7 +97,8 @@ void Scene::AddSceneObject(std::shared_ptr<SceneObject> object)
 
 void Scene::AddLight(std::shared_ptr<Light> light)
 {
-    if (!light) {
+    if (!light) 
+	{
         return;
     }
     sceneLights.emplace_back(std::move(light));

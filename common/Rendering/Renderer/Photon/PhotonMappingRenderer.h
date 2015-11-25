@@ -15,6 +15,7 @@ public:
     glm::vec3 ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const override;
 
     void SetNumberOfDiffusePhotons(int diffuse);
+	void SetNumberOfCausticPhotons(int caustic);
 private:
     using PhotonKdtree = KDTree::KDTree<3, Photon, PhotonAccessor>;
     PhotonKdtree diffuseMap;

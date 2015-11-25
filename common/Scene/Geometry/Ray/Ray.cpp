@@ -53,7 +53,8 @@ glm::vec3 Ray::RefractRay(const glm::vec3& normal, float n1, float& n2) const
     const float NdI = glm::dot(normal, GetRayDirection());
     const float cosTheta1 = std::abs(NdI);
     const float tirCheck = std::pow(eta, 2.f) * (1.f - std::pow(cosTheta1, 2.f));
-    if (tirCheck - 1.f > SMALL_EPSILON) {
+    if (tirCheck - 1.f > SMALL_EPSILON) 
+	{
         n2 = n1;
         return glm::reflect(GetRayDirection(), (NdI > SMALL_EPSILON) ? -1.f * normal : normal);
     }

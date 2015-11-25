@@ -17,7 +17,7 @@
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
-    diffusePhotonNumber(1000000), // 2000000
+    diffusePhotonNumber(500000), // 2000000
     maxPhotonBounces(20) // 1000
 {
     srand(static_cast<unsigned int>(time(NULL)));
@@ -93,88 +93,129 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
 	glm::vec3 intersectionPoint = state.intersectionRay.GetRayPosition(state.intersectionT);
 	glm::vec3 norm = state.ComputeNormal();
 
-	// Move intersection point above the surface
-	intersectionPoint += LARGE_EPSILON * norm;
+	Photon myPhoton;
+	myPhoton.position = intersectionPoint + LARGE_EPSILON * norm; // Move intersection point above the surface
+	myPhoton.normal = norm;
+	myPhoton.intensity = lightIntensity;
+	myPhoton.toLightRay = Ray(intersectionPoint, -photonRay->GetRayDirection());
 
 	const MeshObject* hitMeshObject = state.intersectedPrimitive->GetParentMeshObject();
 	const Material* hitMaterial = hitMeshObject->GetMaterial();
 	const glm::vec3 diffuseColor = hitMaterial->GetBaseDiffuseReflection();
 	const glm::vec3 specularColor = hitMaterial->GetBaseSpecularReflection();
-	const glm::vec3 transmittanceColor = hitMaterial->GetBaseTransmittance();
+//	const glm::vec3 transmittanceColor = hitMaterial->GetBaseTransmittance(); // Don't need at the moment
 
-	float Pr = std::max(diffuseColor.x + specularColor.x, std::max(diffuseColor.y + specularColor.y, diffuseColor.z + specularColor.z));
-	float total = diffuseColor.x + diffuseColor.y + diffuseColor.z + specularColor.x + specularColor.y + specularColor.z;
+	const float transmittance = hitMaterial->GetTransmittance();
+	const float reflectivity = hitMaterial->GetReflectivity();
+	assert(transmittance + reflectivity <= 1.f);
 
-	float diffusePr = (diffuseColor.x + diffuseColor.y + diffuseColor.z) * Pr / total;
-	float specularPr = (specularColor.x + specularColor.y + specularColor.z) * Pr / total;
+	float n2 = hitMaterial->GetIOR();
 
-
-	glm::vec3 newLightIntensity = lightIntensity / Pr;
-	newLightIntensity *= diffuseColor;
-
-	Photon myPhoton;
-	myPhoton.position = intersectionPoint;
-	myPhoton.normal = norm;
-	myPhoton.intensity = lightIntensity; // newLightIntensity; 
-	myPhoton.toLightRay = Ray(intersectionPoint, -photonRay->GetRayDirection());
+	Ray outputRay;
+	glm::vec3 rayDirection = photonRay->GetRayDirection();
 
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<float> dist(0.0, std::nextafter(1.f, FLT_MAX));
 
-	float rx = dist(mt);
-	if (rx > Pr)
+	float rnd = dist(mt);
+	const float NdR = glm::dot(photonRay->GetRayDirection(), norm);
+
+	if (rnd <= transmittance)
 	{
+		const glm::vec3 refractionDir = photonRay->RefractRay(norm, state.currentIOR, n2);
+		outputRay.SetRayPosition(intersectionPoint + LARGE_EPSILON * refractionDir);
+		outputRay.SetRayDirection(refractionDir);
+
+		myPhoton.intensity *= transmittance;
+		myPhoton.position = intersectionPoint + LARGE_EPSILON * refractionDir; // Is it correct?
+	}
+	else if (transmittance < rnd && rnd <= reflectivity)
+	{
+		const glm::vec3 normal = (NdR > SMALL_EPSILON) ? -1.f * norm : norm;
+		const glm::vec3 reflectionDir = glm::reflect(photonRay->GetRayDirection(), normal);
+		outputRay.SetRayPosition(intersectionPoint + LARGE_EPSILON * norm);
+		outputRay.SetRayDirection(reflectionDir);
+
+		myPhoton.intensity *= reflectivity;
+		n2 = currentIOR;
+	} 
+	else
+	{
+		float Pr = std::max(diffuseColor.x + specularColor.x, std::max(diffuseColor.y + specularColor.y, diffuseColor.z + specularColor.z));
+		float total = diffuseColor.x + diffuseColor.y + diffuseColor.z + specularColor.x + specularColor.y + specularColor.z;
+
+		float Pd = (diffuseColor.x + diffuseColor.y + diffuseColor.z) * Pr / total;
+		float Ps = (specularColor.x + specularColor.y + specularColor.z) * Pr / total;
+
+		glm::vec3 newDiffuseLightIntensity = glm::vec3(0.f);
+		if (Pd > 0.f)
+			newDiffuseLightIntensity = lightIntensity * diffuseColor / Pd;
+
+		glm::vec3 newSpecularLightIntensity = glm::vec3(0.f);
+		if (Ps > 0.f)
+			newSpecularLightIntensity = lightIntensity * specularColor / Ps;
+
+		rnd = dist(mt);
+		if (rnd <= Pd)
+		{
+			myPhoton.intensity = newDiffuseLightIntensity;
+		}
+		else if (Pd < rnd && rnd <= Pr)
+		{
+			myPhoton.intensity = newSpecularLightIntensity;
+		}
+		else
+		{
+			if (path.size() > 1)
+				photonMap.insert(myPhoton);
+			return;
+		}
+
 		if (path.size() > 1)
+		{
 			photonMap.insert(myPhoton);
+		}
 
-		return;
+		std::random_device rd2;
+		std::mt19937 mt2(rd2());
+		std::uniform_real_distribution<float> distXY(-1.0, std::nextafter(1.f, FLT_MAX));
+		std::uniform_real_distribution<float> distZ(0.0, std::nextafter(1.f, FLT_MAX));
+
+		float x, y, z;
+		do
+		{
+			x = distXY(mt2);
+			y = distXY(mt2);
+			z = distZ(mt2);
+		} while (x*x + y*y + z*z > 1.f);
+
+		rayDirection = glm::normalize(glm::vec3(x, y, z));
+
+		glm::vec3 mult = glm::vec3(1.f, 0.f, 0.f);
+		float areParallel = std::abs(dot(norm, mult));
+
+		if (std::abs(1.f - areParallel) <= 100.f * LARGE_EPSILON)
+		{
+			mult = glm::vec3(0.f, 1.f, 0.f);
+		}
+
+		glm::vec3 tang = cross(norm, mult);
+		glm::vec3 bitang = cross(norm, tang);
+
+		glm::mat3x3 transform = glm::mat3x3(glm::normalize(tang), glm::normalize(bitang), glm::normalize(norm));
+		rayDirection = transform * rayDirection;
+
+		n2 = currentIOR;
+
+		outputRay.SetRayPosition(intersectionPoint);
+		outputRay.SetRayDirection(rayDirection);
 	}
-
-	myPhoton.intensity = newLightIntensity;
-
-	if (path.size() > 1)
-	{
-		photonMap.insert(myPhoton);
-	}
-
-	Ray reflectionRay;
-	std::random_device rd2;
-	std::mt19937 mt2(rd2());
-	std::uniform_real_distribution<float> distXY(-1.0, std::nextafter(1.f, FLT_MAX));
-	std::uniform_real_distribution<float> distZ(0.0, std::nextafter(1.f, FLT_MAX));
-
-	float x, y, z;
-	do
-	{
-		x = distXY(mt2);
-		y = distXY(mt2);
-		z = distZ(mt2);
-	} while (x*x + y*y + z*z > 1.f);
-
-	glm::vec3 rayDirection = glm::normalize(glm::vec3(x, y, z));
-
-	glm::vec3 mult = glm::vec3(1.f, 0.f, 0.f);
-	float areParallel = std::abs(dot(norm, mult));
-
-	if (std::abs(1.f - areParallel) <= 100.f * LARGE_EPSILON)
-	{
-		mult = glm::vec3(0.f, 1.f, 0.f);
-	}
-
-	glm::vec3 tang = cross(norm, mult);
-	glm::vec3 bitang = cross(norm, tang);
-
-	glm::mat3x3 transform = glm::mat3x3(glm::normalize(tang), glm::normalize(bitang), glm::normalize(norm));
-	rayDirection = transform * rayDirection;
-
-	reflectionRay.SetRayPosition(intersectionPoint);
-	reflectionRay.SetRayDirection(rayDirection);
 
 	--remainingBounces;
 
 	path.push_back('D');
-	TracePhoton(photonMap, &reflectionRay, newLightIntensity, path, currentIOR, remainingBounces);
+	TracePhoton(photonMap, &outputRay, myPhoton.intensity, path, n2, remainingBounces);
 }
 
 glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const
@@ -248,7 +289,7 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
 			float modV = glm::dot(brdfColor, brdfColor);
 			float maxC = std::max(brdfColor.x, std::max(brdfColor.y, brdfColor.z));
 
-			float scale = 2.7f * maxC * maxC / modV; // 3.f
+			float scale = 2.5f * maxC * maxC / modV; // 3.f
 			if (scale > 0.1f && scale < 4.f)
 			{
 				brdfColor = brdfColor * scale;
@@ -326,4 +367,9 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
 void PhotonMappingRenderer::SetNumberOfDiffusePhotons(int diffuse)
 {
     diffusePhotonNumber = diffuse;
+}
+
+void PhotonMappingRenderer::SetNumberOfCausticPhotons(int caustic)
+{
+	causticPhotonNumber = caustic;
 }
