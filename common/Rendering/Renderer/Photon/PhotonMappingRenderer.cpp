@@ -19,9 +19,9 @@
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
     diffusePhotonNumber(300000), // 2000000
-	causticPhotonNumber(600000), // 100000
+	causticPhotonNumber(500000), // 100000
     maxPhotonBounces(10), // 1000
-	gatherSamplesNumber(96)
+	gatherSamplesNumber(64)
 {
     srand(static_cast<unsigned int>(time(NULL)));
 }
@@ -496,7 +496,7 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
 //	glm::vec3 finalRenderColor = glm::vec3(); 
 
 	float diffuseRadius = 0.03;
-	float causticRadius = 0.02;
+	float causticRadius = 0.015;
 
 #if VISUALIZE_PHOTON_MAPPING
 	return finalRenderColor + CalculateColor(intersection, fromCameraRay, diffuseMap, 0.007, 100);
@@ -508,7 +508,7 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
 
 #if !WITHOUT_CAUSTICS
 	glm::vec3 causticColor = CalculateColor(intersection, fromCameraRay, causticMap, causticRadius, 100, true);
-	finalRenderColor += 0.18f * causticColor;
+	finalRenderColor += 0.1f * causticColor;
 #endif
 
 	// Debug

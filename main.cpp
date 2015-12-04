@@ -25,19 +25,19 @@ int main(int argc, char** argv)
 {
     std::unique_ptr<APPLICATION> currentApplication = make_unique<APPLICATION>();
 	currentApplication->SetImageOutputResolution(glm::vec2(600, 450)); // (glm::vec2(1600, 1200)) (1280, 960) (1024, 768)
-	currentApplication->SetSamplesPerPixel(4);
+	currentApplication->SetSamplesPerPixel(1);
 	currentApplication->SetMinSamplesPerPixel(1);
 	currentApplication->SetAdaptiveCoef(10.f);
-	currentApplication->SetGridSize(glm::ivec3(2, 2, 1));
+	currentApplication->SetGridSize(glm::ivec3(1, 1, 1));
 	currentApplication->SetUseAdaptiveSampler(false);
-	currentApplication->SetOutputFilename("Assignment8/New scene/Sphere 300K 600K.png"); 
+	currentApplication->SetOutputFilename("New scene/Sphere 300K 500K.png"); 
 	// Assignment8/Gather/ // Gather 300000 0.02 150f 24 gather samples nodirect fix
 	// "RT + FM/Caustic + RT 64 GS 0.02 0.01r IOR 1.3 scale 0.3.png"
 	currentApplication->SetMaxReflectionBounces(2);
 	currentApplication->SetMaxRefractionBounces(3);
 	currentApplication->SetAcceleratingStructureType(1);
 
-	const std::string logFile = "Assignment8/New scene/Stat.txt"; // Assignment8/Gather/
+	const std::string logFile = "New scene/Stat.txt"; // Assignment8/Gather/
 
 	std::fstream fcout;
 	fcout.open(logFile, std::fstream::out | std::fstream::app);
