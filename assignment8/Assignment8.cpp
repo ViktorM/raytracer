@@ -85,7 +85,7 @@ std::shared_ptr<Scene> Assignment8::CreateScene3() const // main
 
 }
 
-std::shared_ptr<Scene> Assignment8::CreateScene() const
+std::shared_ptr<Scene> Assignment8::CreateSphereScene() const
 {
 	std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
 
@@ -97,8 +97,8 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
 
 	// Objects
 	std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
-	std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Sphere.obj", &loadedMaterials);
-	for (size_t i = 0; i < cubeObjects.size(); ++i) 
+	std::vector<std::shared_ptr<MeshObject>> objects = MeshLoader::LoadMesh("CornellBox/CornellBox-Sphere.obj", &loadedMaterials);
+	for (size_t i = 0; i < objects.size(); ++i) 
 	{
 		std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
 		materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
@@ -106,34 +106,115 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
 
 		if (i == 0)
 		{
-			materialCopy->SetReflectivity(0.8f);
+			materialCopy->SetReflectivity(0.7f);
 		}
 
 		if (i == 1)
 		{
-			materialCopy->SetTransmittance(0.95f);
-			materialCopy->SetIOR(2.f);
+			materialCopy->SetTransmittance(0.8f);
+			materialCopy->SetIOR(1.5f);
 		}
 
-		cubeObjects[i]->SetMaterial(materialCopy);
+		objects[i]->SetMaterial(materialCopy);
 	}
 
 	std::shared_ptr<SceneObject> cubeSceneObject = std::make_shared<SceneObject>();
-	cubeSceneObject->AddMeshObject(cubeObjects);
+	cubeSceneObject->AddMeshObject(objects);
 	cubeSceneObject->Rotate(glm::vec3(1.f, 0.f, 0.f), PI / 2.f);
 	cubeSceneObject->CreateAccelerationData(AccelerationTypes::BVH);
 	newScene->AddSceneObject(cubeSceneObject);
 
 	// Lights
 	std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();
-	pointLight->SetPosition(glm::vec3(0.05909f, 0.0501f, 1.5628f)); // glm::vec3(0.01909f, 0.0101f, 1.5328f)
-	pointLight->SetLightColor(glm::vec3(0.1f, 0.3f, 0.1f)); 
+	pointLight->SetPosition(glm::vec3(-0.005f, -0.01f, 1.5028f)); // glm::vec3(0.01909f, 0.0101f, 1.5328f)
+	pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
 	newScene->AddLight(pointLight);
 
 	std::shared_ptr<PointLight> pointLight2 = std::make_shared<PointLight>();
-	pointLight2->SetPosition(glm::vec3(-0.005f, -0.01f, 1.5328f));
-	pointLight2->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
-	newScene->AddLight(pointLight2);
+	pointLight2->SetPosition(glm::vec3(0.05909f, 0.0501f, 1.5628f));
+	pointLight2->SetLightColor(glm::vec3(0.1f, 0.3f, 0.1f));
+//	newScene->AddLight(pointLight2);
+
+	return newScene;
+}
+
+std::shared_ptr<Scene> Assignment8::CreateScene() const
+{
+	std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+
+	// Material
+	std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
+	cubeMaterial->SetDiffuse(glm::vec3(1.f, 1.f, 1.f));
+	cubeMaterial->SetSpecular(glm::vec3(0.6f, 0.6f, 0.6f), 40.f);
+	//	cubeMaterial->SetReflectivity(0.3f);
+
+	// Objects
+	std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
+	std::vector<std::shared_ptr<MeshObject>> objects = MeshLoader::LoadMesh("CornellBox/CornellBox-Sphere.obj", &loadedMaterials);
+
+//	objects.erase(objects.begin() + 1);
+	for (size_t i = 0; i < objects.size(); ++i)
+	{
+		std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
+		materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
+		materialCopy->SetAmbient(glm::vec3(0.0f, 0.0f, 0.0f));
+
+		if (i == 0)
+		{
+			materialCopy->SetReflectivity(0.7f);
+		}
+
+		if (i == 1)
+		{
+
+			materialCopy->SetTransmittance(0.8f);
+			materialCopy->SetIOR(1.5f);
+		}
+
+		objects[i]->SetMaterial(materialCopy);
+	}
+
+	std::shared_ptr<SceneObject> sceneObject = std::make_shared<SceneObject>();
+	sceneObject->AddMeshObject(objects);
+	sceneObject->Rotate(glm::vec3(1.f, 0.f, 0.f), PI / 2.f);
+	sceneObject->CreateAccelerationData(AccelerationTypes::BVH);
+	newScene->AddSceneObject(sceneObject);
+
+/*	
+	std::vector<std::shared_ptr<aiMaterial>> glassMaterials;
+	std::vector<std::shared_ptr<MeshObject>> glassObjects = MeshLoader::LoadMesh("Project/Glass2/glass.obj", &glassMaterials);
+
+	for (size_t i = 0; i < glassObjects.size(); ++i)
+	{
+		std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
+		materialCopy->LoadMaterialFromAssimp(glassMaterials[i]);
+		materialCopy->SetAmbient(glm::vec3(0.0f, 0.0f, 0.0f));
+
+		materialCopy->SetReflectivity(0.2f);
+		materialCopy->SetTransmittance(0.7f);
+		materialCopy->SetIOR(1.1f);
+
+		glassObjects[i]->SetMaterial(materialCopy);
+	}
+
+	std::shared_ptr<SceneObject> glassObject = std::make_shared<SceneObject>();
+	glassObject->AddMeshObject(objects);
+	glassObject->MultScale(0.2f);
+	glassObject->Translate(glm::vec3(-0.3, -0.5, 0.f));
+	glassObject->Rotate(glm::vec3(1.f, 0.f, 0.f), PI / 2.f);
+	glassObject->CreateAccelerationData(AccelerationTypes::BVH);
+	newScene->AddSceneObject(glassObject);
+*/
+	// Lights
+	std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();
+	pointLight->SetPosition(glm::vec3(-0.005f, -0.01f, 1.5028f)); // glm::vec3(0.01909f, 0.0101f, 1.5328f)
+	pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
+	newScene->AddLight(pointLight);
+
+	std::shared_ptr<PointLight> pointLight2 = std::make_shared<PointLight>();
+	pointLight2->SetPosition(glm::vec3(0.05909f, 0.0501f, 1.5628f));
+	pointLight2->SetLightColor(glm::vec3(0.1f, 0.3f, 0.1f));
+	//	newScene->AddLight(pointLight2);
 
 	return newScene;
 }

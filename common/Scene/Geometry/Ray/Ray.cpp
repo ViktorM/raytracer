@@ -60,5 +60,6 @@ glm::vec3 Ray::RefractRay(const glm::vec3& normal, float n1, float& n2) const
     }
     const float cosTheta2 = std::sqrt(1.f - tirCheck);
     const glm::vec3 refractionDir = eta * GetRayDirection() + (eta * cosTheta1 - cosTheta2) * normal;
+
     return refractionDir;
 }

@@ -19,7 +19,7 @@ public:
 	void Run2();
 
 private:
-    std::unique_ptr<class Application> storedApplication;
+    std::unique_ptr<class Application>	storedApplication;
 
 	std::shared_ptr<class Camera>		currentCamera;
 	std::shared_ptr<class Scene>		currentScene;

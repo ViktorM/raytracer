@@ -6,7 +6,8 @@ class Assignment8 : public Application
 {
 public:
     virtual std::shared_ptr<class Camera> CreateCamera() const override;
-    virtual std::shared_ptr<class Scene> CreateScene() const override;
+    virtual std::shared_ptr<class Scene> CreateSphereScene() const;
+	virtual std::shared_ptr<class Scene> CreateScene() const override;
 	virtual std::shared_ptr<class Scene> CreateScene2() const;
 	virtual std::shared_ptr<class Scene> CreateScene3() const;
 	virtual std::shared_ptr<class Scene> CreateScene4() const;
